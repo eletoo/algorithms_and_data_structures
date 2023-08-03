@@ -1,3 +1,6 @@
+import random
+
+
 class Matrix:
     """A sparse matrix of size height*width, where the matrix is represented as a dictionary of dictionaries."""
 
@@ -65,9 +68,12 @@ class Matrix:
         return (not self.exists(row2, col2)) and (
                 (row1 == row2 and abs(col1 - col2) == 1) or (col1 == col2 and abs(row1 - row2) == 1))
 
-    def is_diagonal_cell(self, row1, col1, row2, col2):
-        """Returns True if the two given positions are diagonal and free from obstacles, False otherwise."""
-        return (not self.exists(row2, col2)) and (abs(row1 - row2) == 1 and abs(col1 - col2) == 1)
+    def pick_random_cell(self, occupied_cells: list):
+        """Returns a random unoccupied cell from the matrix."""
+        start = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+        while self.exists(*start) or start in occupied_cells:
+            start = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+        return start
 
     def __str__(self):
         ret = ""
