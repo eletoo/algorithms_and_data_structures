@@ -17,7 +17,7 @@ class Matrix:
             self.rows[row] = dict()
         self.rows[row][col] = value
 
-    def remove(self, row, col):  # TODO: check if this method is needed
+    def remove(self, row, col):
         """Removes the element at the given position, if it exists."""
         assert (row < self.height)
         assert (col < self.width)

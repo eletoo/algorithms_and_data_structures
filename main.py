@@ -1,5 +1,6 @@
 import configparser
 from generation import main
+from algorithm import solver
 
 if __name__ == '__main__':
     # read parameters from .ini file
@@ -22,3 +23,12 @@ if __name__ == '__main__':
     GOALY = int(config['ENTRY_AGENT']['GOALY'])  # goal y position of the entry agent
 
     grid, agents = main.generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED)
+    print(grid)
+    path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY, NROWS, NCOLS)
+
+    if path is not None:
+        print('Path found:')
+        for p in path:
+            print(p)
+        print('Time taken:', time_taken, '\n')
+        print('Cost:', cost, '\n')
