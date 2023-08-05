@@ -9,15 +9,15 @@ class Matrix:
         self.width = width
         self.rows = dict()
 
-    def add(self, row, col, value=True):
+    def add(self, col, row, value=True):
         """Adds the given element at the given position."""
-        assert (row < self.height)
-        assert (col < self.width)
+        assert (-1 < row < self.height)
+        assert (-1 < col < self.width)
         if row not in self.rows:
             self.rows[row] = dict()
         self.rows[row][col] = value
 
-    def remove(self, row, col):
+    def remove(self, col, row):
         """Removes the element at the given position, if it exists."""
         assert (row < self.height)
         assert (col < self.width)
@@ -25,17 +25,17 @@ class Matrix:
             if col in self.rows[row]:
                 del self.rows[row][col]
 
-    def get(self, row, col):
+    def get(self, col, row):
         """Returns the value of the element at the given position, or None if the element is not found."""
-        assert (row < self.height)
-        assert (col < self.width)
+        assert (-1 < row < self.height)
+        assert (-1 < col < self.width)
         return self.rows.get(row, dict()).get(col, None)
 
-    def exists(self, row, col):
+    def exists(self, col, row):
         """Returns True if the element at the given position exists (i.e. is an obstacle), False otherwise."""
-        return self.get(row, col) is not None
+        return self.get(col, row) is not None
 
-    def neighbours(self, row, col):
+    def neighbours(self, col, row):
         """Generator of neighbours of the element at the given position."""
         for i in range(-1, 2):
             for j in range(-1, 2):
@@ -43,11 +43,15 @@ class Matrix:
                     continue
                 if (row + i) < 0 or (row + i) >= self.height or (col + j) < 0 or (col + j) >= self.width:
                     continue
-                yield row + i, col + j
+                yield col + j, row + i
 
-    def get_neighbours(self, row, col):
+    def get_neighbours(self, col, row):
         """Returns the list of neighbours of the element at the given position."""
-        return list(self.neighbours(row, col))
+        return list(self.neighbours(col, row))
+
+    def get_me_and_neighbours(self, col, row):
+        yield from self.neighbours(col, row)
+        yield col, row
 
     def calc_agg_fac(self):
         """Returns the aggregation factor of the matrix."""
@@ -63,10 +67,10 @@ class Matrix:
 
         return valid / total
 
-    def is_adjacent_cell(self, row1, col1, row2, col2):
+    def is_adjacent_cell(self, x1, y1, x2, y2):
         """Returns True if the two given positions are adjacent and free from obstacles, False otherwise."""
-        return (not self.exists(row2, col2)) and (
-                (row1 == row2 and abs(col1 - col2) == 1) or (col1 == col2 and abs(row1 - row2) == 1))
+        return (not self.exists(x2, y2)) and (
+                (x1 == x2 and abs(y1 - y2) == 1) or (y1 == y2 and abs(x1 - x2) == 1))
 
     def pick_random_cell(self, occupied_cells: list):
         """Returns a random unoccupied cell from the matrix."""
@@ -79,7 +83,7 @@ class Matrix:
         ret = ""
         for row in range(self.height):
             for col in range(self.width):
-                ret += 'X' if self.exists(row, col) else '.'
+                ret += 'X' if self.exists(col, row) else '.'
             ret += '\n'
         return ret
 

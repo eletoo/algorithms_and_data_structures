@@ -1,62 +1,81 @@
 import math
 
 
-def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, nrows, ncols):
+def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y):
     """Returns the shortest path from the initial position to the goal position."""
     closed_set = set()
     open_set = set()
     open_set.add(((init_x, init_y), 0))
     g = dict()
     f = dict()
-    parent = dict()
-    for t in range(max_length + 1):
-        for x in range(nrows):
-            for y in range(ncols):
-                g[((x, y), t)] = float('inf')
-                parent[((x, y), t)] = None
+    parents = dict()
+
+    # for t in range(max_length + 1):
+    #     for x in range(nrows):
+    #         for y in range(ncols):
+    #             g[((x, y), t)] = float('inf')
+    #             parents[((x, y), t)] = None
+
     g[((init_x, init_y), 0)] = 0
     f[((init_x, init_y), 0)] = heuristic(init_x, init_y, goal_x, goal_y)
     while len(open_set) > 0:
         best_f = float('inf')
         current = None  # tuple of ((x, y), t)
-        for item in f.items():  # item is a tuple of (((x, y), t), f)
-            if item[1] <= best_f and not grid.exists(item[0][0][0], item[0][0][1]):
-                best_f = item[1]
-                current = item[0]
+        for item in open_set:  # item is a tuple of ((x, y), t)
+            if f[item] <= best_f and not grid.exists(item[0][0], item[0][1]):
+                best_f = f[item]
+                current = item
         open_set.remove(current)
         closed_set.add(current)
         if current[0] == (goal_x, goal_y):
-            return reconstruct_path(init_x, init_y, parent, current), current[1], f[current]
+            return reconstruct_path(init_x, init_y, parents, current), current[1], f[current]
 
-        if current[1] < max_length:
-            for n in grid.neighbours(current[0][0], current[0][1]):
-                if grid.exists(n[0], n[1]):
-                    continue
-                if (n, current[1] + 1) in closed_set:
-                    continue
+        if current[1] >= max_length:
+            continue
 
-                traversable = True
-                for a in agents:
-                    if current[1] + 1 < len(a.moves) and (
-                            a.moves[current[1] + 1] == n or (
-                            a.moves[current[1] + 1] == current[0] and a.moves[current[1]] == n)):
-                        traversable = False
-                        break
+        for n in grid.get_me_and_neighbours(current[0][0], current[0][1]):
+            if grid.exists(n[0], n[1]):
+                continue
+            if (n, current[1] + 1) in closed_set:
+                continue
 
-                if not traversable:
-                    continue
+            traversable = True
+            for a in agents:
+                if a.get_pos(current[1] + 1) == n or (
+                        a.get_pos(current[1] + 1) == current[0] and a.get_pos(current[1]) == n):
+                    traversable = False
+                    break
 
-                move_cost = 0
-                if current != n:
-                    move_cost = 1 if grid.is_adjacent_cell(current[0][0], current[0][1], n[0], n[1]) else math.sqrt(2)
-                if g[current] + move_cost < g[(n, current[1] + 1)]:
-                    parent[(n, current[1] + 1)] = current
-                    g[(n, current[1] + 1)] = g[current] + move_cost
-                    f[(n, current[1] + 1)] = g[(n, current[1] + 1)] + heuristic(n[0], n[1], goal_x, goal_y)
-                if n not in open_set:
-                    open_set.add((n, current[1] + 1))
+            if not traversable:
+                continue
+
+            move_cost = 0
+            if current != n:
+                move_cost = 1 if grid.is_adjacent_cell(current[0][0], current[0][1], n[0], n[1]) else math.sqrt(2)
+
+            initialize_dicts(current, g, n, parents)  # instead of initializing all dicts at the beginning I only
+            # initialize the ones I need to save memory
+
+            if g[current] + move_cost < g[(n, current[1] + 1)]:
+                parents[(n, current[1] + 1)] = current
+                g[(n, current[1] + 1)] = g[current] + move_cost
+                f[(n, current[1] + 1)] = g[(n, current[1] + 1)] + heuristic(n[0], n[1], goal_x, goal_y)
+            if n not in open_set:
+                open_set.add((n, current[1] + 1))
 
     return None  # reached max_length without finding a path or finished looking through the open_set
+
+
+def initialize_dicts(current, g, n, parents):
+    """Initializes the dictionaries if the current position or the neighbour position are not in the dictionaries."""
+    if current not in g:
+        g[current] = float('inf')
+    if current not in parents:
+        parents[current] = None
+    if (n, current[1] + 1) not in g:
+        g[(n, current[1] + 1)] = float('inf')
+    if (n, current[1] + 1) not in parents:
+        parents[(n, current[1] + 1)] = None
 
 
 def heuristic(x1, y1, x2, y2):

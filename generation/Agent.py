@@ -4,7 +4,7 @@ from random import choice
 
 class Agent:
     def __init__(self, x, y):
-        self.moves = []
+        self.moves = [(x, y)]
         self.x = x
         self.y = y
         self.weight = 0
@@ -22,11 +22,13 @@ class Agent:
         self.y = move[1]
         self.moves.append(move)
 
+    def get_pos(self, time=None):
+        if time is None or time >= len(self.moves):
+            return self.moves[-1]
+        return self.moves[time]
+
     def __str__(self):
         return '->'.join([f"({x}, {y})" for x, y in self.moves]) + f" W:{self.weight}\n"
 
     def __repr__(self):
         return self.__str__()
-
-    def get_pos(self):
-        return self.x, self.y

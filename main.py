@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     grid, agents = main.generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED)
     print(grid)
-    path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY, NROWS, NCOLS)
+    path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY)
 
     if path is not None:
         print('Path found:')
@@ -32,3 +32,7 @@ if __name__ == '__main__':
             print(p)
         print('Time taken:', time_taken, '\n')
         print('Cost:', cost, '\n')
+    else:
+        print('No path found')
+    # TODO: checks on the input parameters (e.g. if the initial and goal positions are valid)
+    # TODO: print on file both the instance and the solution
