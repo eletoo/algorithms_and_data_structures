@@ -22,3 +22,12 @@ def check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, 
         return False, "The goal y coordinate of the entry agent must be between 0 and the number of columns - 1"
 
     return True, ""
+
+
+def check_initial_pos(grid, init_x, init_y, agents):
+    if grid.exists(init_x, init_y) and grid.get((init_x, init_y)):
+        return False, "The initial position of the entry agent is an obstacle"
+    for a in agents:
+        if a.get_pos(0)[0] == init_x and a.get_pos(0)[1] == init_y:
+            return False, "The initial position of the entry agent is the same as the initial position of another agent"
+    return True, ""

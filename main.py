@@ -26,12 +26,17 @@ if __name__ == '__main__':
 
     valid, err_msg = pc.check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, MAX,
                                          INITX, INITY, GOALX, GOALY)
-
     if not valid:
         print(err_msg)
         exit(1)
 
     grid, agents = main.generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED)
+
+    valid, err_msg = pc.check_initial_pos(grid, INITX, INITY, agents)
+    if not valid:
+        print(err_msg)
+        exit(1)
+
     print(grid)
     path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY)
 
