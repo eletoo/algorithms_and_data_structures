@@ -1,6 +1,8 @@
 import configparser
+
 from generation import main
 from algorithm import solver
+from generation import Parameters_check as pc
 
 if __name__ == '__main__':
     # read parameters from .ini file
@@ -21,6 +23,13 @@ if __name__ == '__main__':
     INITY = int(config['ENTRY_AGENT']['INITY'])  # initial y position of the entry agent
     GOALX = int(config['ENTRY_AGENT']['GOALX'])  # goal x position of the entry agent
     GOALY = int(config['ENTRY_AGENT']['GOALY'])  # goal y position of the entry agent
+
+    valid, err_msg = pc.check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, MAX,
+                                         INITX, INITY, GOALX, GOALY)
+
+    if not valid:
+        print(err_msg)
+        exit(1)
 
     grid, agents = main.generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED)
     print(grid)

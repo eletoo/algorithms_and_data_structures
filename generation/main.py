@@ -69,3 +69,4 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
     #                    costs[i] += math.sqrt(2)
 
     return grid, agents
+
