@@ -10,7 +10,7 @@ m.add(1, 3)
 m.add(1, 4)
 m.add(1, 5)
 print(m)
-a = Agent(0, 0)
+a = Agent(2, 0)
 a.moves.extend([(2, 1), (1, 2), (1, 2), (1, 2), (1, 2), (0, 3), (0, 4), (0, 5)])
 
 valid, err_msg = pc.check_initial_pos(m, 0, 0, [a])
@@ -18,14 +18,12 @@ if not valid:
     print(err_msg)
     exit(1)
 
-path, t, c = reach_goal(m, [a], 10, 0, 0, 5, 5)
+path, t, c = reach_goal(m, [a], 10, 0, 0, 5, 3)
 
 if path is not None:
     print('Path found:')
-    str_path = ''
     for p in path:
-        str_path += p.__str__()
-    print(str_path)
+        print(p)
     print('Time taken:', t, '\n')
     print('Cost:', c, '\n')
 else:
