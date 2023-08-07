@@ -1,8 +1,9 @@
 import math
 
 
-def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y):
+def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False):
     """Returns the shortest path from the initial position to the goal position."""
+    path = None
     closed_set = set()
     open_set = set()
     open_set.add(((init_x, init_y), 0))
@@ -32,8 +33,6 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y):
         for n in grid.get_me_and_neighbours(current[0][0], current[0][1]):
             if grid.exists(n[0], n[1]):
                 continue
-            if (n, current[1] + 1) in closed_set:
-                continue
 
             traversable = True
             for a in agents:
@@ -45,9 +44,12 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y):
             if not traversable:
                 continue
 
-            move_cost = 0
-            if current != n:
-                move_cost = 1 if grid.is_adjacent_cell(current[0][0], current[0][1], n[0], n[1]) else math.sqrt(2)
+            move_cost = 1 if grid.is_adjacent_cell(current[0][0], current[0][1], n[0], n[1]) or (
+                current[0][0], current[0][1]) == (n[0], n[1]) else math.sqrt(
+                2)
+
+            if (n, current[1] + 1) in closed_set and g[current] + move_cost >= g[(n, current[1] + 1)]:
+                continue
 
             initialize_dicts(current, g, n, parents)  # instead of initializing all dicts at the beginning I only
             # initialize the ones I need to save memory
@@ -59,6 +61,8 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y):
             if n not in open_set:
                 open_set.add((n, current[1] + 1))
 
+    if incumbent is None:
+        return None, 0, float('inf')
     return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], f[incumbent]
 
 
@@ -89,7 +93,7 @@ def initialize_dicts(current, g, n, parents):
 
 def heuristic(x1, y1, x2, y2):
     """Returns the heuristic value of the given position."""
-    return abs(x1 - x2) + abs(y1 - y2)  # squared euclidean distance (Manhattan distance)
+    return abs(x1 - x2) ** 2 + abs(y1 - y2) ** 2  # squared euler distance
 
 
 def reconstruct_path(init_x, init_y, parent, current):  # TODO: write pseudocode

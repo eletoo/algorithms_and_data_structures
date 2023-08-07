@@ -16,8 +16,9 @@ class Agent:
             if not grid.exists(x, y) and (x, y) not in forbidden_moves]
 
         move = choice(avail_moves)
-        if move != (self.x, self.y):
-            self.weight += 1 if grid.is_adjacent_cell(self.x, self.y, move[0], move[1]) else math.sqrt(2)
+        # if move != (self.x, self.y):
+        self.weight += 1 if grid.is_adjacent_cell(self.x, self.y, move[0], move[1]) or move == (
+            self.x, self.y) else math.sqrt(2)
         self.x = move[0]
         self.y = move[1]
         self.moves.append(move)

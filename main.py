@@ -48,5 +48,17 @@ if __name__ == '__main__':
         print('Cost:', cost, '\n')
     else:
         print('No path found')
-    # TODO: checks on the input parameters (e.g. if the initial and goal positions are valid)
-    # TODO: print on file both the instance and the solution
+
+    # todo: checks on the input parameters (e.g. if the initial and goal positions are valid)
+    # todo: print on file both the instance and the solution
+
+    path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY, True)
+
+    if path is not None:
+        print('Path found:')
+        for p in path:
+            print(p)
+        print('Time taken:', time_taken, '\n')
+        print('Cost:', cost, '\n')
+    else:
+        print('No path found')
