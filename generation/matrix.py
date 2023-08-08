@@ -50,6 +50,7 @@ class Matrix:
         return list(self.neighbours(col, row))
 
     def get_me_and_neighbours(self, col, row):
+        """Returns the list of neighbours of the element at the given position, including the element itself."""
         yield from self.neighbours(col, row)
         yield col, row
 
