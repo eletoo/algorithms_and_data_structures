@@ -55,7 +55,7 @@ if __name__ == '__main__':
     path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY, True)
 
     if path is not None:
-        print('Path found:')
+        print('RELAXED Path found:')
         for p in path:
             print(p)
         print('Time taken:', time_taken, '\n')

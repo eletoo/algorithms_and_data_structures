@@ -18,7 +18,7 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
     for x, y in ghc.gilbert2d(NROWS, NCOLS):  # using the generalized Hilbert curve to fill the grid with obstacles
         if random.random() < AGGLOMERATION_FACTOR:
             grid.add((x + offset_x) % NCOLS, (y + offset_y) % NROWS)
-            n_obstacles -= 1
+            n_obstacles -= 1  # todo: check on obstacles that are already in the grid
             if n_obstacles == 0:
                 break
 
@@ -69,4 +69,3 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
     #                    costs[i] += math.sqrt(2)
 
     return grid, agents
-
