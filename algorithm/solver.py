@@ -1,8 +1,5 @@
 import heapq
 import math
-from collections import namedtuple
-
-from algorithm.Graph import Graph
 
 
 def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False):
@@ -32,8 +29,9 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
         if relaxed:
             relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, (current[0][0], current[0][1]), agents,
                                                                      current[1], max_length)
-            if relaxed_path is not None:
-                return relaxed_path, time_taken, cost
+            if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
+                return reconstruct_path(init_x, init_y, parents, current) + relaxed_path[1:], time_taken + current[
+                    1], cost + g[current]
 
         if current[1] >= max_length:
             continue
@@ -111,14 +109,6 @@ def reconstruct_path(init_x, init_y, parent, current):  # TODO: write pseudocode
         return reconstruct_path(init_x, init_y, parent, parent[current]) + [current[0]]
 
 
-def reconstruct_relaxed_path(init_x, init_y, parent, current):  # TODO: write pseudocode
-    """Returns the path from the initial position to the goal position."""
-    if parent[current] is None:
-        return [current]
-    else:
-        return reconstruct_path(init_x, init_y, parent, parent[current]) + [current]
-
-
 def dijkstra(graph, init_x, init_y, goal_x, goal_y):
     """Returns the shortest path from the initial position to the goal position."""
     parents = dict()
@@ -129,8 +119,8 @@ def dijkstra(graph, init_x, init_y, goal_x, goal_y):
     parents[(goal_x, goal_y)] = None
     while len(heap) > 0:
         current = heapq.heappop(heap)  # (cost, (x, y))
-        if current[1] == (init_x, init_y):
-            break
+        # if current[1] == (init_x, init_y):
+        #   break
         for neighbour in graph.get_me_and_neighbours(current[1][0], current[1][1]):
             w = 1 if graph.is_adjacent_cell(current[1][0], current[1][1], neighbour[0], neighbour[1]) or (
                 current[1][0], current[1][1]) == (neighbour[0], neighbour[1]) else math.sqrt(2)
@@ -154,7 +144,7 @@ def get_aux_path_and_verify(aux, grid, init, agents, tstart, tmax):
         time += 1
         node = aux[node]
 
-    if verify_path(path, init, path[-1], agents, tmax, tstart):
+    if verify_path(path, agents, tstart, grid):
         cost = 0
         for i in range(len(path) - 1):
             if path[i] == path[i + 1] or grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
@@ -166,5 +156,14 @@ def get_aux_path_and_verify(aux, grid, init, agents, tstart, tmax):
     return None, 0, float('inf')
 
 
-def verify_path(path, init, last, agents, tmax, tstart):
+def verify_path(path, agents, tstart, grid):
+    """Returns True if the path is valid, False otherwise."""
+    for i in range(len(path) - 1):
+        for agent in agents:
+            if path[i] == agent.get_pos(tstart + i):
+                return False
+        if grid.exists(path[i][0], path[i][1]):
+            return False
+        if path[i] != path[i + 1] and not grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
+            return False
     return True

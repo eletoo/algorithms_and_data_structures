@@ -61,4 +61,4 @@ if __name__ == '__main__':
         print('Time taken:', time_taken, '\n')
         print('Cost:', cost, '\n')
     else:
-        print('No path found')
+        print('No RELAXED path found')
