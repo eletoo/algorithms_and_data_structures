@@ -1,8 +1,74 @@
 import configparser
+import os
 
 from generation import main
 from algorithm import solver
 from generation import Parameters_check as pc
+import json
+
+
+def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-random",
+                  heuristic="Squared Euler's distance"):
+    name = "iteration_" + str(iteration_number) + relaxed * "_relaxed"
+    data = {
+        'name': name + '.json',
+        'GENERATION_INFO': {
+            'seed': SEED,
+            'n_rows': NROWS,
+            'n_columns': NCOLS,
+            'n_obstacles': NOBSTACLES,
+            'traversable_cells': NROWS * NCOLS - NOBSTACLES,
+            'agglomeration_factor': AGGLOMERATION_FACTOR,
+            'relaxed_path_enabled': relaxed,
+        },
+        'ENTRY_AGENT_INFO': {
+            'max_entry_agent_path_length': MAX,
+            'initial_x': INITX,
+            'initial_y': INITY,
+            'goal_x': GOALX,
+            'goal_y': GOALY,
+        },
+        'EXISTING_AGENTS_INFO': {
+            'agents_path_length': PI_LENGTH,
+            'n_agents': NAGENTS,
+        },
+        'grid': str(grid),
+        'agents':
+            [{
+                'initial_position': (a.x, a.y),
+                'path': [a.moves for a in agents]
+            } for a in agents],
+        'instance_additional_info': {
+            'path_found': path is not None,
+            'time_taken': time_taken,
+            'cost': cost,
+            'closed_states': expanded_states,
+            'opened_states': opened_states,
+            # todo: add number of wait moves
+            'wait_moves': 'todo',
+            'agents_path_generation_method': generation_method,
+        },
+        'solution_additional_info': {
+            'entry_agent_path': [
+                {
+                    'initial_position': (INITX, INITY),
+                    'goal_position': (GOALX, GOALY),
+                    'path': str(path)
+                }
+            ],
+            'visited_states': 'todo',  # todo: add visited states
+            'heuristic': heuristic,
+            'path_length': len(path) if path is not None else 'No path found',
+            'cost': cost,
+            'execution_time': 'todo',  # todo: add execution time
+            'occupied_memory': 'todo'  # todo: add occupied memory
+        }
+    }
+    if 'outputs' not in os.listdir():
+        os.mkdir('outputs')
+    with open('outputs/' + name + '.json', 'w') as f:
+        json.dump(data, f)
+
 
 if __name__ == '__main__':
     # read parameters from .ini file
@@ -38,7 +104,10 @@ if __name__ == '__main__':
         exit(1)
 
     print(grid)
-    path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY)
+    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX,
+                                                                               GOALY)
+
+    print_to_file(iteration_number=1)
 
     if path is not None:
         print('Path found:')
@@ -52,7 +121,10 @@ if __name__ == '__main__':
     # todo: checks on the input parameters (e.g. if the initial and goal positions are valid)
     # todo: print on file both the instance and the solution
 
-    path, time_taken, cost = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX, GOALY, True)
+    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX,
+                                                                               GOALY, True)
+
+    print_to_file(iteration_number=1, relaxed=True)
 
     if path is not None:
         print('RELAXED Path found:')

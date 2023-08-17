@@ -31,7 +31,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                                                                      current[1], max_length)
             if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
                 return reconstruct_path(init_x, init_y, parents, current) + relaxed_path[1:], time_taken + current[
-                    1], cost + g[current]
+                    1], cost + g[current], len(closed_set), len(open_set)
 
         if current[1] >= max_length:
             continue
@@ -67,8 +67,9 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                 open_set.add((n, current[1] + 1))
 
     if incumbent is None:
-        return None, 0, float('inf')
-    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], f[incumbent]
+        return None, 0, float('inf'), 0, 0
+    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], g[incumbent], len(closed_set), len(
+        open_set)
 
 
 def pop_best(closed_set, f, grid, open_set):
@@ -133,7 +134,7 @@ def dijkstra(graph, init_x, init_y, goal_x, goal_y):
     return parents
 
 
-def get_aux_path_and_verify(aux, grid, init, agents, tstart, tmax):
+def get_aux_path_and_verify(aux, grid, init, agents, tstart, tmax):  # todo: write pseudocode
     path = []
     node = init
     time = tstart
@@ -144,7 +145,7 @@ def get_aux_path_and_verify(aux, grid, init, agents, tstart, tmax):
         time += 1
         node = aux[node]
 
-    if verify_path(path, agents, tstart, grid):
+    if is_allowed_path(path, agents, tstart, grid):
         cost = 0
         for i in range(len(path) - 1):
             if path[i] == path[i + 1] or grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
@@ -156,7 +157,7 @@ def get_aux_path_and_verify(aux, grid, init, agents, tstart, tmax):
     return None, 0, float('inf')
 
 
-def verify_path(path, agents, tstart, grid):
+def is_allowed_path(path, agents, tstart, grid):
     """Returns True if the path is valid, False otherwise."""
     for i in range(len(path) - 1):
         for agent in agents:
