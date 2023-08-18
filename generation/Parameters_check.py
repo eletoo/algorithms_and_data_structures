@@ -8,8 +8,8 @@ def check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, 
         return False, "The agglomeration factor must be between 0 and 1"
     if PI_LENGTH < 1 or PI_LENGTH > NROWS * NCOLS:
         return False, "The length of the paths of the agents must be between 1 and the number of cells in the grid"
-    # if NAGENTS < 1 or NAGENTS > NROWS * NCOLS - NOBSTACLES - 1:
-    #     return False, "The number of agents must be between 1 and the number of free cells in the grid minus 1"
+    if NAGENTS < 1 or NAGENTS > NROWS * NCOLS - NOBSTACLES - 1:
+        return False, "The number of agents must be between 1 and the number of free cells in the grid minus 1"
     if MAX < 1:
         return False, "The maximum length of the entry agent's path must be greater than 0"
     if INITX < 0 or INITX >= NROWS:

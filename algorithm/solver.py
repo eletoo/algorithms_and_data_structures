@@ -18,6 +18,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
     g[((init_x, init_y), 0)] = 0
     f[((init_x, init_y), 0)] = heuristic(init_x, init_y, goal_x, goal_y)
     incumbent = None
+    opened_states = 1
     while len(open_set) > 0:
         current = pop_best(closed_set, f, grid, open_set)  # (x, y), t
 
@@ -31,7 +32,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                                                                      current[1], max_length)
             if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
                 return reconstruct_path(init_x, init_y, parents, current) + relaxed_path[1:], time_taken + current[
-                    1], cost + g[current], len(closed_set), len(open_set)
+                    1], cost + g[current], len(closed_set), opened_states
 
         if current[1] >= max_length:
             continue
@@ -65,11 +66,12 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                 f[(n, current[1] + 1)] = g[(n, current[1] + 1)] + heuristic(n[0], n[1], goal_x, goal_y)
             if n not in open_set:
                 open_set.add((n, current[1] + 1))
+                opened_states += 1
 
     if incumbent is None:
         return None, 0, float('inf'), 0, 0
-    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], f[incumbent], len(closed_set), len(
-        open_set)
+    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], f[incumbent], len(
+        closed_set), opened_states
 
 
 def pop_best(closed_set, f, grid, open_set):
