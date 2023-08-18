@@ -17,8 +17,10 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
     offset_y = random.randint(0, NCOLS - 1)
     for x, y in ghc.gilbert2d(NROWS, NCOLS):  # using the generalized Hilbert curve to fill the grid with obstacles
         if random.random() < AGGLOMERATION_FACTOR:
+            if grid.exists((x + offset_x) % NCOLS, (y + offset_y) % NROWS):
+                continue  # if the cell is already occupied, skip it
             grid.add((x + offset_x) % NCOLS, (y + offset_y) % NROWS)
-            n_obstacles -= 1  # todo: check on obstacles that are already in the grid
+            n_obstacles -= 1
             if n_obstacles == 0:
                 break
 

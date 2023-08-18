@@ -1,10 +1,12 @@
 import configparser
 import os
+import time
+import tracemalloc
+import json
 
 from generation import main
 from algorithm import solver
 from generation import Parameters_check as pc
-import json
 
 
 def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-random",
@@ -44,24 +46,24 @@ def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-r
             'cost': cost,
             'closed_states': expanded_states,
             'opened_states': opened_states,
-            # todo: add number of wait moves
-            'wait_moves': 'todo',
             'agents_path_generation_method': generation_method,
         },
         'solution_additional_info': {
-            'entry_agent_path': [
-                {
-                    'initial_position': (INITX, INITY),
-                    'goal_position': (GOALX, GOALY),
-                    'path': str(path)
-                }
-            ],
+            'entry_agent_path': {
+                'initial_position': (INITX, INITY),
+                'goal_position': (GOALX, GOALY),
+                'path': str(path)
+            },
             'visited_states': 'todo',  # todo: add visited states
             'heuristic': heuristic,
             'path_length': len(path) if path is not None else 'No path found',
             'cost': cost,
-            'execution_time': 'todo',  # todo: add execution time
-            'occupied_memory': 'todo'  # todo: add occupied memory
+            'execution_time': elapsed_time,
+            'occupied_memory': {
+                'current': allocated_mem[0],
+                'peak': allocated_mem[1],
+                'unit': 'bytes'
+            }
         }
     }
     if 'outputs' not in os.listdir():
@@ -104,8 +106,13 @@ if __name__ == '__main__':
         exit(1)
 
     print(grid)
-    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX,
-                                                                               GOALY)
+    start = time.time()
+    tracemalloc.start()
+    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX,
+                                                                               INITY, GOALX, GOALY)
+    elapsed_time = time.time() - start
+    allocated_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     print_to_file(iteration_number=1)
 
@@ -119,10 +126,14 @@ if __name__ == '__main__':
         print('No path found')
 
     # todo: checks on the input parameters (e.g. if the initial and goal positions are valid)
-    # todo: print on file both the instance and the solution
 
-    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX, INITY, GOALX,
-                                                                               GOALY, True)
+    start = time.time()
+    tracemalloc.start()
+    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX,
+                                                                               INITY, GOALX, GOALY, True)
+    elapsed_time = time.time() - start
+    allocated_mem = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
 
     print_to_file(iteration_number=1, relaxed=True)
 

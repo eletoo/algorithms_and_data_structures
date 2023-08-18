@@ -57,7 +57,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                 continue
 
             initialize_dicts(current, g, n, parents)  # instead of initializing all dicts at the beginning I only
-            # initialize the ones I need to save memory
+            # initialize the ones I need, thus saving memory
 
             if g[current] + move_cost < g[(n, current[1] + 1)]:
                 parents[(n, current[1] + 1)] = current
@@ -68,7 +68,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
 
     if incumbent is None:
         return None, 0, float('inf'), 0, 0
-    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], g[incumbent], len(closed_set), len(
+    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], f[incumbent], len(closed_set), len(
         open_set)
 
 
