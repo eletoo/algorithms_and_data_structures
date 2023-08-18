@@ -4,8 +4,8 @@ import math
 
 def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False):
     """Returns the shortest path from the initial position to the goal position."""
-    # AuxPath = namedtuple('AuxPath', ['next', 'cost', 'time_taken'])
-    aux = dijkstra(grid, init_x, init_y, goal_x, goal_y)
+    if relaxed:
+        aux = dijkstra(grid, init_x, init_y, goal_x, goal_y, max_length)
 
     closed_set = set()
     open_set = set()
@@ -17,19 +17,24 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
 
     g[((init_x, init_y), 0)] = 0
     f[((init_x, init_y), 0)] = heuristic(init_x, init_y, goal_x, goal_y)
-    incumbent = None
+    # incumbent = None
+    current = None
     opened_states = 1
     while len(open_set) > 0:
         current = pop_best(closed_set, f, grid, open_set)  # (x, y), t
 
         if current[0] == (goal_x, goal_y):
-            if incumbent is None or f[current] < f[incumbent] or (
-                    f[current] == f[incumbent] and current[1] < incumbent[1]):
-                incumbent = current
+            # alternative (more sophisticated) approach to find the best incumbent, which then needs to be substituted
+            # in some more lines of code
+            # if incumbent is None or f[current] < f[incumbent] or (
+            #         f[current] == f[incumbent] and current[1] < incumbent[1]):
+            #     incumbent = current
+            return reconstruct_path(init_x, init_y, parents, current), current[1], f[current], len(
+                closed_set), opened_states
 
         if relaxed:
             relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, (current[0][0], current[0][1]), agents,
-                                                                     current[1], max_length)
+                                                                     current[1] + 1, max_length)
             if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
                 return reconstruct_path(init_x, init_y, parents, current) + relaxed_path[1:], time_taken + current[
                     1], cost + g[current], len(closed_set), opened_states
@@ -68,9 +73,9 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                 open_set.add((n, current[1] + 1))
                 opened_states += 1
 
-    if incumbent is None:
+    if (goal_x, goal_y) not in g:
         return None, 0, float('inf'), 0, 0
-    return reconstruct_path(init_x, init_y, parents, incumbent), incumbent[1], f[incumbent], len(
+    return reconstruct_path(init_x, init_y, parents, current), current[1], f[current], len(
         closed_set), opened_states
 
 
@@ -112,26 +117,28 @@ def reconstruct_path(init_x, init_y, parent, current):  # TODO: write pseudocode
         return reconstruct_path(init_x, init_y, parent, parent[current]) + [current[0]]
 
 
-def dijkstra(graph, init_x, init_y, goal_x, goal_y):
+def dijkstra(graph, init_x, init_y, goal_x, goal_y, max_length):
     """Returns the shortest path from the initial position to the goal position."""
     parents = dict()
     spt_set = dict()
     heap = list()
-    spt_set[(goal_x, goal_y)] = 0
+    spt_set[(goal_x, goal_y)] = (0, 0)  # weight and time
     heapq.heappush(heap, (0, (goal_x, goal_y)))
     parents[(goal_x, goal_y)] = None
     while len(heap) > 0:
         current = heapq.heappop(heap)  # (cost, (x, y))
         # if current[1] == (init_x, init_y):
         #   break
+        if spt_set[current[1]][1] > max_length:  # node is too far away
+            continue
         for neighbour in graph.get_me_and_neighbours(current[1][0], current[1][1]):
             w = 1 if graph.is_adjacent_cell(current[1][0], current[1][1], neighbour[0], neighbour[1]) or (
                 current[1][0], current[1][1]) == (neighbour[0], neighbour[1]) else math.sqrt(2)
 
-            if neighbour not in spt_set or spt_set[neighbour] > current[0] + w:
-                spt_set[neighbour] = current[0] + w
+            if neighbour not in spt_set or spt_set[neighbour][0] > current[0] + w:
+                spt_set[neighbour] = (current[0] + w, spt_set[current[1]][1] + 1)
                 parents[neighbour] = current[1]
-                heapq.heappush(heap, (spt_set[neighbour], neighbour))
+                heapq.heappush(heap, (spt_set[neighbour][0], neighbour))
 
     return parents
 
@@ -165,8 +172,11 @@ def is_allowed_path(path, agents, tstart, grid):
         for agent in agents:
             if path[i] == agent.get_pos(tstart + i):
                 return False
+            if path[i] == agent.get_pos(tstart + i + 1) and path[i + 1] == agent.get_pos(tstart + i):
+                return False
         if grid.exists(path[i][0], path[i][1]):
             return False
         if path[i] != path[i + 1] and not grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
             return False
+
     return True

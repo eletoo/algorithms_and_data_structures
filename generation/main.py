@@ -5,7 +5,8 @@ from generation.Agent import Agent
 from generation.matrix import Matrix
 
 
-def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED):
+def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED, INITX, INITY, GOALX,
+                      GOALY):
     # instead of saving the adjacency matrix, I save only the list of non-zero elements of the matrix and check every
     # time I have to make a move if the cell is empty. This way I save a lot of memory, especially for large grids with
     # few non-zero elements.
@@ -44,30 +45,10 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
         for i in range(NAGENTS):
             agents[i].move(grid, [agents[j].get_pos() for j in range(NAGENTS) if j != i])
 
-    #    moves = dict()
-    #    costs = [0 for _ in range(NAGENTS)]
-    #    for t in range(PI_LENGTH):
-    #        moves[t] = dict()
-    #        for i in range(NAGENTS):
-    #            if t == 0:  # initial position
-    #                pos = (random.randint(0, NROWS - 1), random.randint(0, NCOLS - 1))
-    #
-    #                while grid.get(pos[0], pos[1]) or pos in moves[t].values():
-    #                    # if the position is occupied by an obstacle or by another agent, choose another one
-    #                    pos = (random.randint(0, NROWS - 1), random.randint(0, NCOLS - 1))
-    #                moves[t][i] = pos
-    #            else:
-    #                next_move = random.choice(
-    #                    grid.get_neighbours(moves[t - 1][i][0], moves[t - 1][i][1]) + [moves[t - 1][i]])
-    #
-    #                while next_move in moves[t].values() or grid.get(next_move[0], next_move[1]):
-    #                    # if the position is occupied by an obstacle or by another agent choose another one
-    #                    next_move = random.choice(
-    #                        grid.get_neighbours(moves[t - 1][i][0], moves[t - 1][i][1]) + [moves[t - 1][i]])
-    #                moves[t][i] = next_move
-    #                if grid.is_adjacent_cell(moves[t - 1][i][0], moves[t - 1][i][1], moves[t][i][0], moves[t][i][1]):
-    #                    costs[i] += 1
-    #                elif grid.is_diagonal_cell(moves[t - 1][i][0], moves[t - 1][i][1], moves[t][i][0], moves[t][i][1]):
-    #                    costs[i] += math.sqrt(2)
+    init_x, init_y = grid.pick_random_cell([a.get_pos(0) for a in agents]) if INITX is None or INITY is None else (
+        INITX, INITY)
+    goal_x, goal_y = grid.pick_random_cell(
+        [a.get_pos(None) for a in agents] + [(init_x, init_y)]) if GOALX is None or GOALY is None else (
+        GOALX, GOALY)
 
-    return grid, agents
+    return grid, agents, init_x, init_y, goal_x, goal_y

@@ -1,21 +1,26 @@
 import configparser
+import math
 import os
+import random
 import time
 import tracemalloc
 import json
+import gc
 
 from generation import main
 from algorithm import solver
 from generation import Parameters_check as pc
 
 
-def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-random",
+def print_to_file(seed, init_x, init_y, goal_x, goal_y, iteration_number=0, relaxed=False,
+                  generation_method="Pseudo-random",
                   heuristic="Squared Euler's distance"):
     name = "iteration_" + str(iteration_number) + relaxed * "_relaxed"
     data = {
         'name': name + '.json',
         'GENERATION_INFO': {
-            'seed': SEED,
+            'master_seed': SEED,
+            'seed': seed,
             'n_rows': NROWS,
             'n_columns': NCOLS,
             'n_obstacles': NOBSTACLES,
@@ -25,20 +30,19 @@ def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-r
         },
         'ENTRY_AGENT_INFO': {
             'max_entry_agent_path_length': MAX,
-            'initial_x': INITX,
-            'initial_y': INITY,
-            'goal_x': GOALX,
-            'goal_y': GOALY,
+            'initial_x': init_x,
+            'initial_y': init_y,
+            'goal_x': goal_x,
+            'goal_y': goal_y,
         },
         'EXISTING_AGENTS_INFO': {
             'agents_path_length': PI_LENGTH,
             'n_agents': NAGENTS,
         },
-        'grid': str(grid),
         'agents':
             [{
                 'initial_position': (a.x, a.y),
-                'path': [a.moves for a in agents]
+                'path': a.moves
             } for a in agents],
         'instance_additional_info': {
             'path_found': path is not None,
@@ -50,8 +54,8 @@ def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-r
         },
         'solution_additional_info': {
             'entry_agent_path': {
-                'initial_position': (INITX, INITY),
-                'goal_position': (GOALX, GOALY),
+                'initial_position': (init_x, init_y),
+                'goal_position': (goal_x, goal_y),
                 'path': str(path)
             },
             'heuristic': heuristic,
@@ -71,51 +75,54 @@ def print_to_file(iteration_number=0, relaxed=False, generation_method="Pseudo-r
         json.dump(data, f)
 
 
-def run_simulation(iteration_number=0):
+def run_simulation(seed, sim_name):
     global grid, agents, valid, err_msg, path, time_taken, cost, expanded_states, opened_states, elapsed_time, allocated_mem
 
-    valid, err_msg = pc.check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS,
-                                         MAX,
-                                         INITX, INITY, GOALX, GOALY)
+    valid, err_msg = pc.check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, MAX)
     if not valid:
         print(err_msg)
         return
 
-    grid, agents = main.generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, SEED)
-    valid, err_msg = pc.check_initial_pos(grid, INITX, INITY, agents)
+    grid, agents, init_x, init_y, goal_x, goal_y = main.generate_instance(NROWS, NCOLS, NOBSTACLES,
+                                                                          AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS,
+                                                                          seed, INITX, INITY, GOALX, GOALY)
+    valid, err_msg = pc.check_initial_and_final_pos(grid, init_x, init_y, goal_x, goal_y, agents)
     if not valid:
         print(err_msg)
         return
 
     print(grid)
-    start = time.time()
+    start = time.monotonic()
     tracemalloc.start()
-    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX,
-                                                                               INITY, GOALX, GOALY)
-    elapsed_time = time.time() - start
+    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, init_x,
+                                                                               init_y, goal_x, goal_y)
+    elapsed_time = time.monotonic() - start
     allocated_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    print_to_file(iteration_number=iteration_number)
+    print_to_file(seed, init_x, init_y, goal_x, goal_y, iteration_number=sim_name)
+    gc.collect()  # garbage collector to free memory
+
     if path is not None:
         print('Path found:')
-        for p in path:
-            print(p)
+        print('->'.join([str(p) for p in path]))
         print('Time taken:', time_taken, '\n')
         print('Cost:', cost, '\n')
     else:
         print('No path found')
-    start = time.time()
+
+    start = time.monotonic()
     tracemalloc.start()
-    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, INITX,
-                                                                               INITY, GOALX, GOALY, True)
-    elapsed_time = time.time() - start
+    path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, init_x,
+                                                                               init_y, goal_x, goal_y, True)
+    elapsed_time = time.monotonic() - start
     allocated_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    print_to_file(iteration_number=iteration_number, relaxed=True)
+    print_to_file(seed, init_x, init_y, goal_x, goal_y, iteration_number=sim_name, relaxed=True)
+    gc.collect()  # to free memory
+
     if path is not None:
         print('RELAXED Path found:')
-        for p in path:
-            print(p)
+        print('->'.join([str(p) for p in path]))
         print('Time taken:', time_taken, '\n')
         print('Cost:', cost, '\n')
     else:
@@ -127,83 +134,90 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('parameters.ini')
     SEED = int(config['GENERATION']['SEED'])  # for reproducibility
-    INITX = int(config['ENTRY_AGENT']['INITX'])  # initial x position of the entry agent
-    INITY = int(config['ENTRY_AGENT']['INITY'])  # initial y position of the entry agent
-    GOALX = int(config['ENTRY_AGENT']['GOALX'])  # goal x position of the entry agent
-    GOALY = int(config['ENTRY_AGENT']['GOALY'])  # goal y position of the entry agent
+    master_random = random.Random(SEED)
 
+    AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
+
+    INITX = None
+    INITY = None
+    GOALX = None
+    GOALY = None
     # ask user if they want to read parameters from file or run simulations
-    print('Do you want to read the simulation parameters from file? (Y/n)')
+    print('Do you want to read the configuration parameters from manually-edited file? (y/N)'
+          '\nIf not, the simulations will be run with automatic parameters')
     answer = input()
-    if answer == 'y' or answer == 'Y' or answer == '':
+    if answer == 'y' or answer == 'Y':
         NROWS = int(config['GENERATION']['NROWS'])
         NCOLS = int(config['GENERATION']['NCOLS'])
         NOBSTACLES = int(config['GENERATION']['NOBSTACLES'])
-        AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
+        INITX = int(config['ENTRY_AGENT']['INITX'])  # initial x position of the entry agent
+        INITY = int(config['ENTRY_AGENT']['INITY'])  # initial y position of the entry agent
+        GOALX = int(config['ENTRY_AGENT']['GOALX'])  # goal x position of the entry agent
+        GOALY = int(config['ENTRY_AGENT']['GOALY'])  # goal y position of the entry agent
 
         PI_LENGTH = int(
             config['EXISTING_AGENTS']['PI_LENGTH'])  # constant length of the Pi route of the existing agents
         NAGENTS = int(config['EXISTING_AGENTS']['NAGENTS'])
 
-        MAX = int(config['ENTRY_AGENT']['MAX'])  # maximum length of the route of the entry agent
+        MAX = int(config['ENTRY_AGENT']['MAX'])
 
-        run_simulation(0)
-    else:
+        run_simulation(master_random.randint(0, 2 ** 32), 0)
+    elif answer == 'n' or answer == 'N' or answer == '':
         print('Varying grid size...')
-        for i in range(10, 51, 5):  # todo: reduce to 30
+        for i in range(10, 51, 5):
             NROWS = i
             NCOLS = i
 
-            NOBSTACLES = int(config['GENERATION']['NOBSTACLES'])
-            AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
-            PI_LENGTH = int(config['EXISTING_AGENTS']['PI_LENGTH'])
-            NAGENTS = int(config['EXISTING_AGENTS']['NAGENTS'])
-            MAX = int(config['ENTRY_AGENT']['MAX'])
+            NAGENTS = math.floor(0.2 * NROWS * NCOLS)  # 20% of the grid is occupied by agents
+            NOBSTACLES = math.floor(NROWS * NCOLS * 0.5)  # 50% grid occupied by obstacles
+            PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)  # 50% of the remaining cells
+            MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))
 
-            run_simulation('grid_size_' + str(i))
+            run_simulation(master_random.randint(0, 2 ** 32), 'grid_size_' + str(i))
+        exit(0)
         print('Varying number of obstacles...')
-        for i in range(10, 101, 10):
+        for i in range(10, 1251, 100):
             NOBSTACLES = i
 
-            AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
-            NROWS = int(config['GENERATION']['NROWS'])
-            NCOLS = int(config['GENERATION']['NCOLS'])
-            PI_LENGTH = int(config['EXISTING_AGENTS']['PI_LENGTH'])
-            NAGENTS = int(config['EXISTING_AGENTS']['NAGENTS'])
-            MAX = int(config['ENTRY_AGENT']['MAX'])
+            NROWS = math.floor(math.sqrt(NOBSTACLES * 2))  # to make sure that obstacles are 50% of the grid
+            NCOLS = math.floor(math.sqrt(NOBSTACLES * 2))
+            PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)
+            NAGENTS = math.floor(0.1 * NROWS * NCOLS)
+            MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))
 
-            run_simulation('n_obstacles_' + str(i))
+            run_simulation(master_random.randint(0, 2 ** 32), 'n_obstacles_' + str(i))
         print('Varying number of existing agents...')
-        for i in range(10, 101, 10):
+        for i in range(10, 501, 10):
             NAGENTS = i
 
-            AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
-            NROWS = int(config['GENERATION']['NROWS'])
-            NCOLS = int(config['GENERATION']['NCOLS'])
-            NOBSTACLES = int(config['GENERATION']['NOBSTACLES'])
-            PI_LENGTH = int(config['EXISTING_AGENTS']['PI_LENGTH'])
-            MAX = int(config['ENTRY_AGENT']['MAX'])
+            NROWS = math.floor(math.sqrt(NAGENTS / 0.2))  # to make sure that agents are 20% of the grid
+            NCOLS = math.floor(math.sqrt(NAGENTS / 0.2))
+            NOBSTACLES = math.floor(NROWS * NCOLS * 0.5)
+            PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)
+            MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))
 
-            run_simulation('n_agents_' + str(i))
+            run_simulation(master_random.randint(0, 2 ** 32), 'n_agents_' + str(i))
         print('Varying length of existing agents paths...')
-        for i in range(5, 51, 5):
+        for i in range(10, 51, 10):
             PI_LENGTH = i
 
-            AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
-            NROWS = int(config['GENERATION']['NROWS'])
-            NCOLS = int(config['GENERATION']['NCOLS'])
-            NOBSTACLES = int(config['GENERATION']['NOBSTACLES'])
-            NAGENTS = int(config['EXISTING_AGENTS']['NAGENTS'])
-            MAX = int(config['ENTRY_AGENT']['MAX'])
-            run_simulation('pi_length_' + str(i))
+            NROWS = math.floor(PI_LENGTH)
+            NCOLS = math.floor(PI_LENGTH)
+            NOBSTACLES = math.floor(NROWS * NCOLS * 0.5)
+            NAGENTS = math.floor(0.2 * NROWS * NCOLS)
+            MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))
+
+            run_simulation(master_random.randint(0, 2 ** 32), 'pi_length_' + str(i))
         print('Varying maximum length of entry agent path...')
-        for i in range(5, 51, 5):
+        for i in range(10, 51, 10):
             MAX = i
 
-            AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
-            NROWS = int(config['GENERATION']['NROWS'])
-            NCOLS = int(config['GENERATION']['NCOLS'])
-            NOBSTACLES = int(config['GENERATION']['NOBSTACLES'])
-            NAGENTS = int(config['EXISTING_AGENTS']['NAGENTS'])
-            PI_LENGTH = int(config['EXISTING_AGENTS']['PI_LENGTH'])
-            run_simulation('max_' + str(i))
+            NROWS = math.floor(MAX)
+            NCOLS = math.floor(MAX)
+            NOBSTACLES = math.floor(NROWS * NCOLS * 0.6)
+            NAGENTS = math.floor(0.2 * NROWS * NCOLS)
+            PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)
+            run_simulation(master_random.randint(0, 2 ** 32), 'max_' + str(i))
+    else:
+        print('Invalid input')
+        exit(0)

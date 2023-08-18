@@ -13,7 +13,7 @@ print(m)
 a = Agent(0, 1)
 # a.moves.extend([(2, 1), (2, 0), (3, 0), (4, 0), (5, 0)])
 
-valid, err_msg = pc.check_initial_pos(m, 0, 0, [a, Agent(1, 0)])
+valid, err_msg = pc.check_initial_and_final_pos(m, 0, 0, [a, Agent(1, 0)])
 if not valid:
     print(err_msg)
     exit(1)
