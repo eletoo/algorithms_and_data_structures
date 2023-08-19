@@ -1,4 +1,5 @@
 def check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS, MAX):
+    """Checks that the parameters are valid"""
     if NROWS < 1 or NROWS < 1:
         return False, "The number of rows and columns must be greater than 0"
     if NOBSTACLES < 0 or NOBSTACLES > NROWS * NCOLS:
@@ -16,6 +17,7 @@ def check_parameters(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH, 
 
 
 def check_initial_and_final_pos(grid, init_x, init_y, goal_x, goal_y, agents):
+    """Checks that the initial and final positions of the entry agent are valid"""
     if grid.exists(init_x, init_y):
         return False, "The initial position of the entry agent is an obstacle"
     if init_x < 0 or init_x >= grid.width:

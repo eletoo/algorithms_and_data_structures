@@ -86,16 +86,20 @@ def run_simulation(seed, sim_name):
     grid, agents, init_x, init_y, goal_x, goal_y = main.generate_instance(NROWS, NCOLS, NOBSTACLES,
                                                                           AGGLOMERATION_FACTOR, PI_LENGTH, NAGENTS,
                                                                           seed, INITX, INITY, GOALX, GOALY)
+
     valid, err_msg = pc.check_initial_and_final_pos(grid, init_x, init_y, goal_x, goal_y, agents)
     if not valid:
         print(err_msg)
         return
 
     print(grid)
-    start = time.monotonic()
-    tracemalloc.start()
+    print('Initial position:', init_x, init_y)
+    print('Goal position:', goal_x, goal_y)
+
+    start = time.monotonic()  # to measure execution time
+    tracemalloc.start()  # to measure memory usage
     path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, init_x,
-                                                                               init_y, goal_x, goal_y)
+                                                                               init_y, goal_x, goal_y)  # to find path
     elapsed_time = time.monotonic() - start
     allocated_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
@@ -114,6 +118,7 @@ def run_simulation(seed, sim_name):
     tracemalloc.start()
     path, time_taken, cost, expanded_states, opened_states = solver.reach_goal(grid, agents, MAX, init_x,
                                                                                init_y, goal_x, goal_y, True)
+    # to find relaxed path
     elapsed_time = time.monotonic() - start
     allocated_mem = tracemalloc.get_traced_memory()
     tracemalloc.stop()
@@ -133,8 +138,8 @@ if __name__ == '__main__':
     # to read parameters from .ini file
     config = configparser.ConfigParser()
     config.read('parameters.ini')
-    SEED = int(config['GENERATION']['SEED'])  # for reproducibility
-    master_random = random.Random(SEED)
+    SEED = int(config['GENERATION']['SEED'])  # for reproducibility; global seed
+    master_random = random.Random(SEED)  # master random object, used to generate all other random numbers
 
     AGGLOMERATION_FACTOR = float(config['GENERATION']['AGGLOMERATION_FACTOR'])
 
@@ -142,18 +147,20 @@ if __name__ == '__main__':
     INITY = None
     GOALX = None
     GOALY = None
+
     # ask user if they want to read parameters from file or run simulations
     print('Do you want to read the configuration parameters from manually-edited file? (y/N)'
           '\nIf not, the simulations will be run with automatic parameters')
     answer = input()
+
     if answer == 'y' or answer == 'Y':
         NROWS = int(config['GENERATION']['NROWS'])
         NCOLS = int(config['GENERATION']['NCOLS'])
         NOBSTACLES = int(config['GENERATION']['NOBSTACLES'])
-        INITX = int(config['ENTRY_AGENT']['INITX'])  # initial x position of the entry agent
-        INITY = int(config['ENTRY_AGENT']['INITY'])  # initial y position of the entry agent
-        GOALX = int(config['ENTRY_AGENT']['GOALX'])  # goal x position of the entry agent
-        GOALY = int(config['ENTRY_AGENT']['GOALY'])  # goal y position of the entry agent
+        INITX = int(config['ENTRY_AGENT']['INITX'])
+        INITY = int(config['ENTRY_AGENT']['INITY'])
+        GOALX = int(config['ENTRY_AGENT']['GOALX'])
+        GOALY = int(config['ENTRY_AGENT']['GOALY'])
 
         PI_LENGTH = int(
             config['EXISTING_AGENTS']['PI_LENGTH'])  # constant length of the Pi route of the existing agents
@@ -162,21 +169,22 @@ if __name__ == '__main__':
         MAX = int(config['ENTRY_AGENT']['MAX'])
 
         run_simulation(master_random.randint(0, 2 ** 32), 0)
-    elif answer == 'n' or answer == 'N' or answer == '':
+        # the random seed is produced using the master random object, ensuring that no matter how many times we run the
+        # script, the same random numbers will be drawn and all simulations will be reproducible
+    elif answer == 'n' or answer == 'N' or answer == '':  # automatic simulations
         print('Varying grid size...')
-        for i in range(10, 51, 5):
+        for i in range(5, 51, 5):  # grid size varies from 10x10 to 50x50, 10 simulations
             NROWS = i
             NCOLS = i
 
             NAGENTS = math.floor(0.2 * NROWS * NCOLS)  # 20% of the grid is occupied by agents
             NOBSTACLES = math.floor(NROWS * NCOLS * 0.5)  # 50% grid occupied by obstacles
             PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)  # 50% of the remaining cells
-            MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))
+            MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))  # as per the instructions by the professor
 
             run_simulation(master_random.randint(0, 2 ** 32), 'grid_size_' + str(i))
-        exit(0)
         print('Varying number of obstacles...')
-        for i in range(10, 1251, 100):
+        for i in range(10, 1251, 125):  # number of obstacles varies from 10 to 1250, 10 simulations
             NOBSTACLES = i
 
             NROWS = math.floor(math.sqrt(NOBSTACLES * 2))  # to make sure that obstacles are 50% of the grid
@@ -187,7 +195,7 @@ if __name__ == '__main__':
 
             run_simulation(master_random.randint(0, 2 ** 32), 'n_obstacles_' + str(i))
         print('Varying number of existing agents...')
-        for i in range(10, 501, 10):
+        for i in range(10, 501, 50):  # number of existing agents varies from 10 to 500, 10 simulations
             NAGENTS = i
 
             NROWS = math.floor(math.sqrt(NAGENTS / 0.2))  # to make sure that agents are 20% of the grid
@@ -198,7 +206,7 @@ if __name__ == '__main__':
 
             run_simulation(master_random.randint(0, 2 ** 32), 'n_agents_' + str(i))
         print('Varying length of existing agents paths...')
-        for i in range(10, 51, 10):
+        for i in range(10, 51, 5):  # length of existing agents paths varies from 10 to 50, 10 simulations
             PI_LENGTH = i
 
             NROWS = math.floor(PI_LENGTH)
@@ -209,7 +217,7 @@ if __name__ == '__main__':
 
             run_simulation(master_random.randint(0, 2 ** 32), 'pi_length_' + str(i))
         print('Varying maximum length of entry agent path...')
-        for i in range(10, 51, 10):
+        for i in range(10, 51, 5):  # maximum length of entry agent path varies from 10 to 50, 10 simulations
             MAX = i
 
             NROWS = math.floor(MAX)

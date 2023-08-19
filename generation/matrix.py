@@ -5,6 +5,7 @@ class Matrix:
     """A sparse matrix of size height*width, where the matrix is represented as a dictionary of dictionaries."""
 
     def __init__(self, height, width):
+        """Creates a new matrix of the given size."""
         self.height = height
         self.width = width
         self.rows = dict()
@@ -81,6 +82,8 @@ class Matrix:
         return start
 
     def __str__(self):
+        """Returns a string representation of the matrix, where obstacles are represented as 'X' and free cells as
+        '.'."""
         ret = ""
         for row in range(self.height):
             for col in range(self.width):
