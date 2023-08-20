@@ -8,36 +8,38 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
         aux = dijkstra(grid, goal_x, goal_y, max_length)
 
     closed_set = set()
-    open_set = set()
-    open_set.add(((init_x, init_y), 0))
+    open_set = list()
+    heapq.heappush(open_set, (heuristic(init_x, init_y, goal_x, goal_y), ((init_x, init_y), 0)))  # (f, ((x, y), t))
+    # open_set.add(((init_x, init_y), 0))
     g = dict()  # weights
-    f = dict()  # f = g + heuristic
+    # f = dict()  # f = g + heuristic
     parents = dict()
     parents[((init_x, init_y), 0)] = None  # parent node of initial state is None
 
     g[((init_x, init_y), 0)] = 0  # weight of initial state is 0
-    f[((init_x, init_y), 0)] = heuristic(init_x, init_y, goal_x, goal_y)  # f = g(initial node) + heuristic
+    # f[((init_x, init_y), 0)] = heuristic(init_x, init_y, goal_x, goal_y)  # f = g(initial node) + heuristic
 
     # incumbent = None
     current = None
     opened_states = 1
 
     while len(open_set) > 0:
-        current = pop_best(closed_set, f, grid, open_set)  # (x, y), t
+        # current = pop_best(closed_set, f, grid, open_set)  # (x, y), t
+        f, current = heapq.heappop(open_set)
 
+        closed_set.add(current)
         if current[0] == (goal_x, goal_y):  # if I reached the goal I return the path from init to goal
             # alternative (more sophisticated) approach to find the best incumbent, which then needs to be substituted
             # in some more lines of code
             # if incumbent is None or f[current] < f[incumbent] or (
             #         f[current] == f[incumbent] and current[1] < incumbent[1]):
             #     incumbent = current
-            return reconstruct_path(init_x, init_y, parents, current), current[1], f[current], len(
+            return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
                 closed_set), opened_states
 
         if relaxed:
             # compute the relaxed path from current node to goal and verify that it does not collide with other agents
-            relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, (current[0][0], current[0][1]), agents,
-                                                                     current[1] + 1, max_length)
+            relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, (current[0][0], current[0][1]), agents, current[1] + 1, max_length)
             if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
                 # return the path from init to current node + the relaxed path from current node to goal, the time taken
                 # to reach the goal, the cost of the path, the number of nodes in the closed set and the number of
@@ -76,14 +78,17 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
             if g[current] + move_cost < g[(n, current[1] + 1)]:  # if the new path is better than the previous one
                 parents[(n, current[1] + 1)] = current  # update the parent of the neighbour
                 g[(n, current[1] + 1)] = g[current] + move_cost  # update the weight of the neighbour
-                f[(n, current[1] + 1)] = g[(n, current[1] + 1)] + heuristic(n[0], n[1], goal_x, goal_y)  # update f
-            if n not in open_set:  # if the neighbour is not in the open set I add it and count it as an opened state
-                open_set.add((n, current[1] + 1))
+                # f[(n, current[1] + 1)] = g[(n, current[1] + 1)] + heuristic(n[0], n[1], goal_x, goal_y)  # update f
+            if (n, current[1] + 1) not in list(map(lambda x: x[1], open_set)):
+                # if the neighbour is not in the open set I add it and count it as an opened state
+                heapq.heappush(open_set,
+                               (g[(n, current[1] + 1)] + heuristic(n[0], n[1], goal_x, goal_y), (n, current[1] + 1)))
+                # open_set.add((n, current[1] + 1))
                 opened_states += 1
 
     if (goal_x, goal_y) not in g:  # if the goal is not in g it means that it is not reachable
         return None, 0, float('inf'), 0, 0
-    return reconstruct_path(init_x, init_y, parents, current), current[1], f[current], len(
+    return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
         closed_set), opened_states
 
 
@@ -180,16 +185,16 @@ def get_aux_path_and_verify(aux, grid, init, agents, tstart, max_length):  # tod
 
 def is_allowed_path(path, agents, tstart, grid):
     """Returns True if the path is valid, False otherwise."""
-    for i in range(len(path) - 1):  # for each position of the entry agent (EA) in the path
+    for i in range(len(path)):  # for each position of the entry agent (EA) in the path
         for agent in agents:  # for each agent
             if path[i] == agent.get_pos(tstart + i):  # if the agent is in the position
                 return False
-            if path[i] == agent.get_pos(tstart + i + 1) and path[i + 1] == agent.get_pos(tstart + i):
+            if i < len(path) - 1 and path[i] == agent.get_pos(tstart + i + 1) and path[i + 1] == agent.get_pos(tstart + i):
                 # if agent and EA swap positions
                 return False
         if grid.exists(path[i][0], path[i][1]):  # if the position is an obstacle
             return False
-        if path[i] != path[i + 1] and not grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
+        if i < len(path) - 1 and path[i] != path[i + 1] and not grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
             # if the positions are not adjacent
             return False
 
