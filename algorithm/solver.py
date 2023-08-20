@@ -2,7 +2,7 @@ import heapq
 import math
 
 
-def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False):
+def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False, greedy=True):
     """Returns the shortest path from the initial position to the goal position."""
     if relaxed:  # if I want to use the relaxed version of the algorithm I need to run the Dijkstra algorithm
         aux = dijkstra(grid, goal_x, goal_y, max_length)
@@ -19,7 +19,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
     g[((init_x, init_y), 0)] = 0  # weight of initial state is 0
     # f[((init_x, init_y), 0)] = heuristic(init_x, init_y, goal_x, goal_y)  # f = g(initial node) + heuristic
 
-    # incumbent = None
+    incumbent = None
     current = None
     opened_states = 1
 
@@ -29,17 +29,16 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
 
         closed_set.add(current)
         if current[0] == (goal_x, goal_y):  # if I reached the goal I return the path from init to goal
-            # alternative (more sophisticated) approach to find the best incumbent, which then needs to be substituted
-            # in some more lines of code
-            # if incumbent is None or f[current] < f[incumbent] or (
-            #         f[current] == f[incumbent] and current[1] < incumbent[1]):
-            #     incumbent = current
-            return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
-                closed_set), opened_states
+            if incumbent is None or g[current] < g[incumbent] or (
+                    g[current] == g[incumbent] and current[1] < incumbent[1]):
+                incumbent = current
+            if greedy:
+                return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
+                    closed_set), opened_states
 
         if relaxed:
             # compute the relaxed path from current node to goal and verify that it does not collide with other agents
-            relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, (current[0][0], current[0][1]), agents, current[1] + 1, max_length)
+            relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, current[0], agents, current[1], max_length)
             if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
                 # return the path from init to current node + the relaxed path from current node to goal, the time taken
                 # to reach the goal, the cost of the path, the number of nodes in the closed set and the number of
@@ -86,9 +85,9 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                 # open_set.add((n, current[1] + 1))
                 opened_states += 1
 
-    if (goal_x, goal_y) not in g:  # if the goal is not in g it means that it is not reachable
+    if incumbent is None:  # if the goal is not in g it means that it is not reachable
         return None, 0, float('inf'), 0, 0
-    return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
+    return reconstruct_path(init_x, init_y, parents, incumbent), current[1], g[incumbent], len(
         closed_set), opened_states
 
 
@@ -185,6 +184,8 @@ def get_aux_path_and_verify(aux, grid, init, agents, tstart, max_length):  # tod
 
 def is_allowed_path(path, agents, tstart, grid):
     """Returns True if the path is valid, False otherwise."""
+    if len(path) == 0:  # if the path is empty
+        return True
     for i in range(len(path)):  # for each position of the entry agent (EA) in the path
         for agent in agents:  # for each agent
             if path[i] == agent.get_pos(tstart + i):  # if the agent is in the position
