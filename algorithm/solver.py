@@ -2,7 +2,7 @@ import heapq
 import math
 
 
-def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False, greedy=True):
+def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False):
     """Returns the shortest path from the initial position to the goal position."""
     if relaxed:  # if I want to use the relaxed version of the algorithm I need to run the Dijkstra algorithm
         aux = dijkstra(grid, goal_x, goal_y, max_length)
@@ -32,9 +32,8 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
             if incumbent is None or g[current] < g[incumbent] or (
                     g[current] == g[incumbent] and current[1] < incumbent[1]):
                 incumbent = current
-            if greedy:
-                return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
-                    closed_set), opened_states
+            return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
+                closed_set), opened_states
 
         if relaxed:
             # compute the relaxed path from current node to goal and verify that it does not collide with other agents
@@ -120,8 +119,12 @@ def initialize_dicts(current, g, n, parents):
 
 def heuristic(x1, y1, x2, y2):
     """Returns the heuristic value of the given position."""
-    # return abs(x1 - x2) ** 2 + abs(y1 - y2) ** 2  # squared Euler's distance
-    return abs(x1 - x2) + abs(y1 - y2)  # Manhattan distance
+    # return abs(x1 - x2) ** 2 + abs(y1 - y2) ** 2  # squared Euclidean distance
+    # return abs(x1 - x2) + abs(y1 - y2)  # Manhattan distance
+    return max(abs(x1 - x2), abs(y1 - y2))  # Chebyshev distance
+    # dx = abs(x1 - x2)
+    # dy = abs(y1 - y2)
+    # return dx + dy + (math.sqrt(2) - 2) * min(dx, dy)  # octile distance (distanza diagonale)
 
 
 def reconstruct_path(init_x, init_y, parent, current):  # TODO: write pseudocode
