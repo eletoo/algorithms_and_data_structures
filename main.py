@@ -14,7 +14,7 @@ from generation import Parameters_check as pc
 
 def print_to_file(seed, init_x, init_y, goal_x, goal_y, iteration_number=0, relaxed=False,
                   generation_method="Pseudo-random",
-                  heuristic="Squared Euler's distance"):
+                  heuristic="Manhattan distance"):
     name = "iteration_" + str(iteration_number) + relaxed * "_relaxed"
     data = {
         'name': name + '.json',

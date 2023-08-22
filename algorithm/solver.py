@@ -38,7 +38,8 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
 
         if relaxed:
             # compute the relaxed path from current node to goal and verify that it does not collide with other agents
-            relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, current[0], agents, current[1], max_length)
+            relaxed_path, time_taken, cost = get_aux_path_and_verify(aux, grid, current[0], agents, current[1],
+                                                                     max_length)
             if relaxed_path is not None and time_taken != 0 and cost is not float('inf'):
                 # return the path from init to current node + the relaxed path from current node to goal, the time taken
                 # to reach the goal, the cost of the path, the number of nodes in the closed set and the number of
@@ -119,7 +120,8 @@ def initialize_dicts(current, g, n, parents):
 
 def heuristic(x1, y1, x2, y2):
     """Returns the heuristic value of the given position."""
-    return abs(x1 - x2) ** 2 + abs(y1 - y2) ** 2  # squared Euler's distance
+    # return abs(x1 - x2) ** 2 + abs(y1 - y2) ** 2  # squared Euler's distance
+    return abs(x1 - x2) + abs(y1 - y2)  # Manhattan distance
 
 
 def reconstruct_path(init_x, init_y, parent, current):  # TODO: write pseudocode
@@ -190,12 +192,14 @@ def is_allowed_path(path, agents, tstart, grid):
         for agent in agents:  # for each agent
             if path[i] == agent.get_pos(tstart + i):  # if the agent is in the position
                 return False
-            if i < len(path) - 1 and path[i] == agent.get_pos(tstart + i + 1) and path[i + 1] == agent.get_pos(tstart + i):
+            if i < len(path) - 1 and path[i] == agent.get_pos(tstart + i + 1) and path[i + 1] == agent.get_pos(
+                    tstart + i):
                 # if agent and EA swap positions
                 return False
         if grid.exists(path[i][0], path[i][1]):  # if the position is an obstacle
             return False
-        if i < len(path) - 1 and path[i] != path[i + 1] and not grid.is_adjacent_cell(path[i][0], path[i][1], path[i + 1][0], path[i + 1][1]):
+        if i < len(path) - 1 and path[i] != path[i + 1] and not grid.is_adjacent_cell(path[i][0], path[i][1],
+                                                                                      path[i + 1][0], path[i + 1][1]):
             # if the positions are not adjacent
             return False
 
