@@ -55,20 +55,6 @@ class Matrix:
         yield from self.neighbours(col, row)
         yield col, row
 
-    def calc_agg_fac(self):
-        """Returns the aggregation factor of the matrix."""
-        total = 0
-        valid = 0
-        for i in range(0, self.height):
-            for j in range(0, self.width):
-                if self.exists(i, j):
-                    for l, k in self.neighbours(i, j):
-                        if self.exists(l, k):
-                            valid += 1
-                        total += 1
-
-        return valid / total
-
     def is_adjacent_cell(self, x1, y1, x2, y2):
         """Returns True if the two given positions are adjacent and free from obstacles, False otherwise."""
         return (not self.exists(x2, y2)) and (
