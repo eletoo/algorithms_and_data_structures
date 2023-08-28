@@ -24,7 +24,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
 
         closed_set.add(current)
         if current[0] == (goal_x, goal_y):  # if I reached the goal I return the path from init to goal
-            return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
+            return reconstruct_path(parents, current), current[1], g[current], len(
                 closed_set), opened_states
 
         if relaxed:
@@ -35,7 +35,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
                 # return the path from init to current node + the relaxed path from current node to goal, the time taken
                 # to reach the goal, the cost of the path, the number of nodes in the closed set and the number of
                 # opened states
-                return reconstruct_path(init_x, init_y, parents, current) + relaxed_path[1:], time_taken + current[
+                return reconstruct_path(parents, current) + relaxed_path[1:], time_taken + current[
                     1], cost + g[current], len(closed_set), opened_states
 
         if current[1] >= max_length:  # if I reached the maximum length I go to the next iteration of the while loop
@@ -76,7 +76,7 @@ def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed
 
     if current[0] != (goal_x, goal_y):
         return None, 0, float('inf'), 0, 0
-    return reconstruct_path(init_x, init_y, parents, current), current[1], g[current], len(
+    return reconstruct_path(parents, current), current[1], g[current], len(
         closed_set), opened_states
 
 
@@ -100,13 +100,13 @@ def heuristic(x1, y1, x2, y2):
     # return dx + dy + (math.sqrt(2) - 2) * min(dx, dy)  # distanza diagonale
 
 
-def reconstruct_path(init_x, init_y, parent, current):
+def reconstruct_path(parents, current):
     """Returns the path from the initial position to the goal position."""
-    if parent[current] is None:  # if the current position is the initial position
+    if parents[current] is None:  # if the current position is the initial position
         return [current[0]]  # return the current position
     else:
         # return the current position and the path from the initial position to the parent of the current position
-        return reconstruct_path(init_x, init_y, parent, parent[current]) + [current[0]]
+        return reconstruct_path(parents, parents[current]) + [current[0]]
 
 
 def dijkstra(graph, goal_x, goal_y, max_length):
