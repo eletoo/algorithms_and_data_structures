@@ -29,6 +29,7 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
             if n_obstacles == 0:
                 break
 
+    # IF WE DON'T USE HILBERT CURVES:
     # To guarantee that the agglomeration factor is exactly the one specified in the parameters.ini file, we'd need to
     # add obstacles until the agglomeration factor is reached. However, this would contradict the requirement for a
     # specific number of obstacles. Therefore, we add obstacles until the number is equal to the one specified in the
@@ -36,11 +37,6 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
     # agglomeration factor will be slightly lower than the required value.
     # Specifically, the agglomeration factor will be correct for the cells of the grid that are internal to the
     # clusters, while it will be lower than the required value for the cells that are on the border of the clusters.
-    # to prove that the agglomeration factor is correct if no constraint is added to the number of obstacles, remove the
-    # if n_obstacles == 0: break statement and uncomment the following lines:
-    # print(grid.calc_agg_fac())
-    # print(AGGLOMERATION_FACTOR)
-    # print(grid)
 
     agents = []
     for i in range(NAGENTS):
