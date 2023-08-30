@@ -48,7 +48,7 @@ def print_to_file(seed, init_x, init_y, goal_x, goal_y, iteration_number=0, rela
             'path_found': path is not None,
             'time_taken': time_taken,
             'cost': cost,
-            'closed_states': expanded_states,
+            'expanded_states': expanded_states,
             'opened_states': opened_states,
             'agents_path_generation_method': generation_method,
         },

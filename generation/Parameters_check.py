@@ -28,8 +28,12 @@ def check_initial_and_final_pos(grid, init_x, init_y, goal_x, goal_y, agents):
         return False, "The goal x coordinate of the entry agent must be between 0 and the number of rows - 1"
     if goal_y < 0 or goal_y >= grid.height:
         return False, "The goal y coordinate of the entry agent must be between 0 and the number of columns - 1"
-
+    if grid.exists(goal_x, goal_y):
+        return False, "The goal position of the entry agent is an obstacle"
     for a in agents:
         if a.get_pos(0)[0] == init_x and a.get_pos(0)[1] == init_y:
             return False, "The initial position of the entry agent is the same as the initial position of another agent"
+        if a.get_pos()[0] == goal_x and a.get_pos()[1] == goal_y:
+            return False, "The goal position of the entry agent is the same as the goal position of another agent"
+
     return True, ""
