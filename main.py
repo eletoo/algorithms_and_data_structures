@@ -182,15 +182,15 @@ if __name__ == '__main__':
             PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)  # 50% of the remaining cells
             MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))  # as per the instructions by the professor
 
-            run_simulation(master_random.randint(0, 2 ** 32), 'grid_size_' + str(i))
+            run_simulation(master_random.randint(0, 2 ** 32), 'grid_size_' + str(i if i > 9 else '0' + str(i)))
         print('Varying number of obstacles...')
         for i in range(10, 1251, 125):  # number of obstacles varies from 10 to 1250, 10 simulations
             NOBSTACLES = i
 
             NROWS = math.floor(math.sqrt(NOBSTACLES * 2))  # to make sure that obstacles are 50% of the grid
             NCOLS = math.floor(math.sqrt(NOBSTACLES * 2))
+            NAGENTS = math.floor(0.2 * NROWS * NCOLS)  # 20% of the grid is occupied by agents
             PI_LENGTH = math.floor((NROWS * NCOLS - NOBSTACLES - NAGENTS - 1) * 0.5)
-            NAGENTS = math.floor(0.1 * NROWS * NCOLS)
             MAX = math.floor(0.5 * (NROWS * NCOLS - NOBSTACLES - PI_LENGTH))
 
             run_simulation(master_random.randint(0, 2 ** 32), 'n_obstacles_' + str(i))
