@@ -1,5 +1,6 @@
 import json
 
+import numpy
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -11,13 +12,13 @@ files_relaxed = dict()
 for i in range(len(paths)):
     files[i] = []
     files_relaxed[i] = []
-    for j in range(5, 41, 5):
+    for j in range(5, 51, 5):
         n = f"0{j}"[-2:]
         files_relaxed[i].append(f"iteration_grid_size_{n}_relaxed.json")
         files[i].append(f"iteration_grid_size_{n}.json")
 
 # occupazione di memoria in funzione delle dimensioni della griglia
-xAxis = [x for x in range(5, 41, 5)]
+xAxis = [x for x in range(5, 51, 5)]
 yaxis = dict()
 # for every row in yaxis, fill the row with the values of the corresponding file
 for i in range(len(files)):
@@ -28,7 +29,6 @@ for i in range(len(files)):
         data = json.load(file)
         yaxis[i][j] = data['solution_additional_info']['occupied_memory']['peak']
         file.close()
-
 
 y = []
 # compute the average value of each column of yaxis and put it in y
@@ -58,21 +58,15 @@ for i in range(len(xAxis)):
 
 fit = np.polyfit(xAxis, y, 2)
 fit_fn = np.poly1d(fit)
-fit2 = np.polyfit(xAxis, yRel, 2)
-fit_fn2 = np.poly1d(fit2)
 yfn = fit_fn(xAxis)
 for i in range(len(yfn)):
     if yfn[i] < 0:
         yfn[i] = 0
 
-yfn2 = fit_fn2(xAxis)
-for i in range(len(yfn2)):
-    if yfn2[i] < 0:
-        yfn2[i] = 0
+b, a = numpy.polyfit(xAxis, numpy.log(y), 1)
+plt.plot(xAxis, y, xAxis, yRel, xAxis, list(map(lambda x: numpy.exp(a) * numpy.exp(b * x), xAxis)), xAxis, yfn)
 
-plt.plot(xAxis, y, xAxis, yRel, xAxis, yfn, '--k', xAxis, yfn2, '--r')
-plt.legend(['ReachGoal', 'ReachGoal Rilassato', 'Funzione approx ReachGoal (deg 2)',
-            'Funzione approx ReachGoal Rilassato (deg 2)'])
+plt.legend(['ReachGoal', 'ReachGoal Rilassato', 'Funzione approx (exp)', 'Funzione approx (deg 2)'])
 plt.xlabel('Dimensione Griglia')
 plt.ylabel('Memoria Media Occupata (B) [su ' + str(len(files)) + ' simulazioni]')
 plt.title('Memoria media occupata in funzione della dimensione della Griglia')
