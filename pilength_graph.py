@@ -7,18 +7,23 @@ if 'graphs' not in os.listdir(output_folder):
     os.mkdir(output_folder + 'graphs/')
 
 # tempo impiegato al variare della lunghezza dei percorsi preesistenti
-xAxis = [x for x in range(10, 51, 5)]
+xAxis = []
 yAxis = []
 for i in range(10, 51, 5):
-    with open(output_folder + 'iteration_pi_length_' + str(i) + '.json', 'r') as file:
-        data = json.load(file)
-        yAxis.append(data['solution_additional_info']['execution_time'])
+    fn = output_folder + 'iteration_pi_length_' + str(i) + '.json'
+    if fn in os.listdir(output_folder):
+        xAxis.append(i)
+        with open(fn, 'r') as file:
+            data = json.load(file)
+            yAxis.append(data['solution_additional_info']['execution_time'])
 
 yAxisRel = []
 for i in range(10, 51, 5):
-    with open(output_folder + 'iteration_pi_length_' + str(i) + '_relaxed.json', 'r') as file:
-        data = json.load(file)
-        yAxisRel.append(data['solution_additional_info']['execution_time'])
+    fn = output_folder + 'iteration_pi_length_' + str(i) + '.json'
+    if fn in os.listdir(output_folder):
+        with open(fn, 'r') as file:
+            data = json.load(file)
+            yAxisRel.append(data['solution_additional_info']['execution_time'])
 
 plt.plot(xAxis, yAxis, xAxis, yAxisRel)
 plt.legend(['ReachGoal', 'ReachGoal Rilassato'])

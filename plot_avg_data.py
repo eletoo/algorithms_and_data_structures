@@ -16,7 +16,7 @@ for i in range(len(paths)):
                 f.startswith('iteration_grid_size_') and not f.endswith('relaxed.json')]
 
 # occupazione di memoria in funzione delle dimensioni della griglia
-xAxis = [x for x in range(5, 51, 5)]
+xAxis = []
 yaxis = dict()
 # for every row in yaxis, fill the row with the values of the corresponding file
 for i in range(len(files)):
@@ -25,6 +25,7 @@ for i in range(len(files)):
         f = files[i][j]
         file = open(paths[i] + '/' + f, 'r')
         data = json.load(file)
+        xAxis.append(data['GENERATION_INFO']['n_rows'])
         yaxis[i][j] = data['solution_additional_info']['occupied_memory']['peak']
         file.close()
 
