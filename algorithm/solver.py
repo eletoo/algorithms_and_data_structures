@@ -4,7 +4,7 @@ import math
 
 def reach_goal(grid, agents, max_length, init_x, init_y, goal_x, goal_y, relaxed=False):
     """Returns the shortest path from the initial position to the goal position."""
-    if relaxed:  # if I want to use the relaxed version of the algorithm I need to run the Dijkstra algorithm
+    if relaxed:
         aux = dijkstra(grid, goal_x, goal_y, max_length)
 
     closed_set = set()
@@ -105,7 +105,7 @@ def reconstruct_path(parents, current):
     if parents[current] is None:  # if the current position is the initial position
         return [current[0]]  # return the current position
     else:
-        # return the current position and the path from the initial position to the parent of the current position
+        # return the path from the initial position to the parent of the current position and the current position
         return reconstruct_path(parents, parents[current]) + [current[0]]
 
 
@@ -117,7 +117,7 @@ def dijkstra(graph, goal_x, goal_y, max_length):
     spt_set[(goal_x, goal_y)] = (0, 0)  # weight and time (0, 0) of the goal position
     heapq.heappush(heap, (0, (goal_x, goal_y)))  # push the goal position to the heap
     parents[(goal_x, goal_y)] = None
-    while len(heap) > 0:  # while the heap is not empty
+    while len(heap) > 0:
         current = heapq.heappop(heap)  # (cost, (x, y))
         if spt_set[current[1]][1] > max_length:  # node is too far away
             continue

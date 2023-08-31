@@ -173,7 +173,7 @@ if __name__ == '__main__':
         # script, the same random numbers will be drawn and all simulations will be reproducible
     elif answer == 'n' or answer == 'N' or answer == '':  # automatic simulations
         print('Varying grid size...')
-        for i in range(5, 51, 5):  # grid size varies from 10x10 to 50x50, 10 simulations
+        for i in range(5, 51, 5):  # grid size varies from 5x5 to 50x50, 10 simulations
             NROWS = i
             NCOLS = i
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
 
             run_simulation(master_random.randint(0, 2 ** 32), 'n_agents_' + str(i))
         print('Varying length of existing agents paths...')
-        for i in range(10, 51, 5):  # length of existing agents paths varies from 10 to 50, 10 simulations
+        for i in range(10, 51, 5):  # length of existing agents paths varies from 10 to 50, 9 simulations
             PI_LENGTH = i
 
             NROWS = math.floor(PI_LENGTH)
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
             run_simulation(master_random.randint(0, 2 ** 32), 'pi_length_' + str(i))
         print('Varying maximum length of entry agent path...')
-        for i in range(10, 51, 5):  # maximum length of entry agent path varies from 10 to 50, 10 simulations
+        for i in range(10, 51, 5):  # maximum length of entry agent path varies from 10 to 50, 9 simulations
             MAX = i
 
             NROWS = math.floor(MAX)

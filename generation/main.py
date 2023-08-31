@@ -28,7 +28,7 @@ def generate_instance(NROWS, NCOLS, NOBSTACLES, AGGLOMERATION_FACTOR, PI_LENGTH,
             if n_obstacles == 0:
                 break
 
-    # IF WE DON'T USE HILBERT CURVES:
+    # IF WE DIDN'T USE THE HILBERT CURVE:
     # To guarantee that the agglomeration factor is exactly the one specified in the parameters.ini file, we'd need to
     # add obstacles until the agglomeration factor is reached. However, this would contradict the requirement for a
     # specific number of obstacles. Therefore, we add obstacles until the number is equal to the one specified in the
