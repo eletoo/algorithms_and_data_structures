@@ -1,4 +1,3 @@
-import os
 import json
 
 import numpy as np
@@ -10,13 +9,15 @@ paths = ['outputs/', 'outputs1/', 'outputs2/', 'outputs3/', 'outputs4/', 'output
 files = dict()
 files_relaxed = dict()
 for i in range(len(paths)):
-    files_relaxed[i] = [f for f in os.listdir(paths[i]) if
-                        f.startswith('iteration_grid_size_') and f.endswith('relaxed.json')]
-    files[i] = [f for f in os.listdir(paths[i]) if
-                f.startswith('iteration_grid_size_') and not f.endswith('relaxed.json')]
+    files[i] = []
+    files_relaxed[i] = []
+    for j in range(5, 41, 5):
+        n = f"0{j}"[-2:]
+        files_relaxed[i].append(f"iteration_grid_size_{n}_relaxed.json")
+        files[i].append(f"iteration_grid_size_{n}.json")
 
 # occupazione di memoria in funzione delle dimensioni della griglia
-xAxis = []
+xAxis = [x for x in range(5, 41, 5)]
 yaxis = dict()
 # for every row in yaxis, fill the row with the values of the corresponding file
 for i in range(len(files)):
@@ -25,9 +26,9 @@ for i in range(len(files)):
         f = files[i][j]
         file = open(paths[i] + '/' + f, 'r')
         data = json.load(file)
-        xAxis.append(data['GENERATION_INFO']['n_rows'])
         yaxis[i][j] = data['solution_additional_info']['occupied_memory']['peak']
         file.close()
+
 
 y = []
 # compute the average value of each column of yaxis and put it in y
@@ -43,7 +44,7 @@ for i in range(len(files_relaxed)):
     yaxis_relaxed[i] = [0 for x in range(len(files_relaxed[i]))]
     for j in range(len(files_relaxed[i])):
         f = files_relaxed[i][j]
-        file = open(paths[i] + '/' + f, 'r')
+        file = open(paths[i] + f, 'r')
         data = json.load(file)
         yaxis_relaxed[i][j] = data['solution_additional_info']['occupied_memory']['peak']
         file.close()
@@ -72,9 +73,9 @@ for i in range(len(yfn2)):
 plt.plot(xAxis, y, xAxis, yRel, xAxis, yfn, '--k', xAxis, yfn2, '--r')
 plt.legend(['ReachGoal', 'ReachGoal Rilassato', 'Funzione approx ReachGoal (deg 2)',
             'Funzione approx ReachGoal Rilassato (deg 2)'])
-plt.xlabel('Dimensioni Griglia')
+plt.xlabel('Dimensione Griglia')
 plt.ylabel('Memoria Media Occupata (B) [su ' + str(len(files)) + ' simulazioni]')
-plt.title('Memoria media occupata in funzione delle dimensioni della griglia')
+plt.title('Memoria media occupata in funzione della dimensione della Griglia')
 plt.grid(True)
 plt.savefig('avg_dimensioni_griglia_mem.pdf')
 plt.clf()
